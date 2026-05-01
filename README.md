@@ -90,8 +90,8 @@ grounded, source-cited answers to research questions.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-username>/alzheimers-rag.git
-cd alzheimers-rag
+git clone https://github.com/avanibhat/neuroquery.git
+cd neuroquery
 ```
 
 ### 2. Install dependencies
@@ -121,13 +121,9 @@ GROQ_API_KEY=gsk_...
 ENTREZ_EMAIL=you@example.com
 ```
 
-- `GROQ_API_KEY` — from [console.groq.com](https://console.groq.com)
-- `ENTREZ_EMAIL` — any valid email; required by NCBI for Entrez API access
-
 ### 5. (Optional) Add local PDFs
 
-Drop any Alzheimer's research PDFs into `data/docs/`. They will be ingested
-alongside PubMed abstracts.
+Drop any Alzheimer's research PDFs into `data/docs/`.
 
 ### 6. Ingest documents
 
@@ -135,8 +131,7 @@ alongside PubMed abstracts.
 python backend/ingest.py
 ```
 
-Fetches 100 PubMed abstracts, embeds everything with BioBERT, and stores
-vectors in `chroma_store/`. Takes ~5–15 minutes on CPU (one-time).
+Fetches 100 PubMed abstracts, embeds everything with BioBERT, stores vectors in `chroma_store/`. Takes ~5–15 minutes on CPU (one-time).
 
 ### 7. Start the server
 
@@ -150,82 +145,7 @@ PYTHONPATH=backend uvicorn backend.main:app --reload
 $env:PYTHONPATH="backend"; uvicorn backend.main:app --reload
 ```
 
-Open [http://localhost:8000](http://localhost:8000) in your browser.
-
----
-
-## Docker (local)
-
-```bash
-# Build
-docker build -t alzheimers-rag .
-
-# Run
-docker run -p 8000:8000 --env-file .env alzheimers-rag
-
-# Persist the vector store across restarts
-docker run -p 8000:8000 --env-file .env \
-  -v $(pwd)/chroma_store:/app/chroma_store \
-  alzheimers-rag
-```
-
----
-
-## Hosting Online (Free)
-
-### Option A — Hugging Face Spaces (recommended)
-
-Hugging Face Spaces supports Docker deployments and is free for public projects.
-
-1. **Create a new Space** at [huggingface.co/new-space](https://huggingface.co/new-space)
-   - SDK: **Docker**
-   - Visibility: Public
-
-2. **Add your secrets** in the Space settings → *Repository secrets*:
-   ```
-   GROQ_API_KEY=gsk_...
-   ENTREZ_EMAIL=you@example.com
-   ```
-
-3. **Push this repo** to the Space:
-   ```bash
-   git remote add space https://huggingface.co/spaces/<your-username>/<space-name>
-   git push space main
-   ```
-
-4. The Space builds the Docker image and starts the server automatically.
-   Your app will be live at:
-   ```
-   https://<your-username>-<space-name>.hf.space
-   ```
-
-> **Note:** Free Spaces have ~16 GB disk and 2 vCPU. BioBERT + ChromaDB fits
-> comfortably. On cold start, BioBERT downloads once and is cached.
-
----
-
-### Option B — Railway
-
-1. Go to [railway.app](https://railway.app) and create a new project from GitHub
-2. Set environment variables in the Railway dashboard:
-   ```
-   GROQ_API_KEY=gsk_...
-   ENTREZ_EMAIL=you@example.com
-   PYTHONPATH=backend
-   ```
-3. Railway auto-detects the Dockerfile and deploys
-
-Free tier gives $5/month of compute credit — enough for light usage.
-
----
-
-### Option C — Render
-
-1. Go to [render.com](https://render.com) → New Web Service → connect your GitHub repo
-2. Set:
-   - **Runtime:** Docker
-   - **Environment variables:** `GROQ_API_KEY`, `ENTREZ_EMAIL`, `PYTHONPATH=backend`
-3. Free tier spins down after 15 minutes of inactivity (cold start ~30s)
+Open [http://localhost:8000](http://localhost:8000).
 
 ---
 
@@ -237,8 +157,7 @@ Free tier gives $5/month of compute credit — enough for light usage.
 | Requests per day | 1,000 |
 | Tokens per minute | 12,000 |
 
-Sufficient for individual or small-group research use. Each user who clones
-this repo should use **their own Groq API key**.
+Sufficient for individual or small-group research use.
 
 ---
 
@@ -258,12 +177,13 @@ This project is scoped exclusively to **Alzheimer's Disease (AD)** research.
 ## Project Structure
 
 ```
-alzheimers-rag/
+neuroquery/
 ├── backend/
 │   ├── main.py        # FastAPI app (routes, startup, CORS)
 │   ├── ingest.py      # PubMed fetch + PDF loader + chunking
 │   ├── retriever.py   # BioBERT embedding + ChromaDB client
-│   └── llm.py         # Groq prompt builder + API call
+│   ├── llm.py         # Groq prompt builder + API call
+│   └── config.py      # centralised settings
 ├── data/
 │   └── docs/          # Drop PDFs here for local ingestion
 ├── frontend/
