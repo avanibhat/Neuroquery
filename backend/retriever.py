@@ -1,132 +1,87 @@
-"""
-retriever.py — BioBERT-based embedding + ChromaDB retrieval.
-
-Embeds text using dmis-lab/biobert-v1.1 with mean pooling of the last
-hidden state. ChromaDB stores vectors persistently at ./chroma_store.
-"""
-
-from pathlib import Path
+import logging
 
 import torch
 import chromadb
 from transformers import AutoTokenizer, AutoModel
 from tqdm import tqdm
 
-MODEL_NAME = "dmis-lab/biobert-v1.1"
-CHROMA_PATH = str(Path(__file__).parent.parent / "chroma_store")
-COLLECTION_NAME = "alzheimers_docs"
+from config import BIOBERT_MODEL, CHROMA_PATH, COLLECTION_NAME, DEFAULT_TOP_K
 
-# ---------------------------------------------------------------------------
-# Model (lazy-loaded once)
-# ---------------------------------------------------------------------------
+log = logging.getLogger(__name__)
 
 _tokenizer = None
 _model = None
+_client = None
+_collection = None
 
 
 def _load_model():
     global _tokenizer, _model
     if _tokenizer is None:
-        _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        _model = AutoModel.from_pretrained(MODEL_NAME)
+        log.info("Loading BioBERT model: %s", BIOBERT_MODEL)
+        _tokenizer = AutoTokenizer.from_pretrained(BIOBERT_MODEL)
+        _model = AutoModel.from_pretrained(BIOBERT_MODEL)
         _model.eval()
+        log.info("BioBERT loaded.")
 
-
-# ---------------------------------------------------------------------------
-# Embedding
-# ---------------------------------------------------------------------------
 
 def embed(text: str) -> list[float]:
-    """Return a mean-pooled BioBERT embedding for the given text."""
     _load_model()
-    inputs = _tokenizer(
-        text,
-        return_tensors="pt",
-        truncation=True,
-        max_length=512,
-        padding=True,
-    )
+    inputs = _tokenizer(text, return_tensors="pt", truncation=True, max_length=512, padding=True)
     with torch.no_grad():
         outputs = _model(**inputs)
-
-    # Mean pool last hidden state, ignoring padding tokens
-    last_hidden = outputs.last_hidden_state          # (1, seq_len, hidden)
-    attention_mask = inputs["attention_mask"]        # (1, seq_len)
-    mask_expanded = attention_mask.unsqueeze(-1).float()
-    sum_hidden = (last_hidden * mask_expanded).sum(dim=1)
-    sum_mask = mask_expanded.sum(dim=1).clamp(min=1e-9)
-    pooled = (sum_hidden / sum_mask).squeeze(0)      # (hidden,)
-    return pooled.tolist()
-
-
-# ---------------------------------------------------------------------------
-# ChromaDB client
-# ---------------------------------------------------------------------------
-
-_client = None
-_collection = None
+    last_hidden   = outputs.last_hidden_state
+    mask_expanded = inputs["attention_mask"].unsqueeze(-1).float()
+    pooled = (last_hidden * mask_expanded).sum(dim=1) / mask_expanded.sum(dim=1).clamp(min=1e-9)
+    return pooled.squeeze(0).tolist()
 
 
 def _get_collection():
     global _client, _collection
     if _collection is None:
+        log.info("Connecting to ChromaDB at %s", CHROMA_PATH)
         _client = chromadb.PersistentClient(path=CHROMA_PATH)
-        # No built-in embedding function — we supply embeddings manually
         _collection = _client.get_or_create_collection(
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
         )
+        log.info("Collection '%s' ready (%d chunks).", COLLECTION_NAME, _collection.count())
     return _collection
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
 def add_documents(chunks: list[dict]) -> None:
-    """
-    Embed and store document chunks in ChromaDB.
-
-    Args:
-        chunks: list of {"text": str, "source": str}
-    """
     collection = _get_collection()
-    existing_count = collection.count()
+    existing   = collection.count()
+    log.info("Embedding %d chunks (existing: %d)...", len(chunks), existing)
 
-    ids = [f"doc_{existing_count + i}" for i in range(len(chunks))]
-    documents = [c["text"] for c in chunks]
-    metadatas = [{"source": c.get("source", "unknown")} for c in chunks]
-
+    ids        = [f"doc_{existing + i}" for i in range(len(chunks))]
+    documents  = [c["text"] for c in chunks]
+    metadatas  = [{"source": c.get("source", "unknown")} for c in chunks]
     embeddings = [
         embed(c["text"])
         for c in tqdm(chunks, desc="Embedding chunks", unit="chunk", colour="green")
     ]
 
-    collection.add(
-        ids=ids,
-        documents=documents,
-        metadatas=metadatas,
-        embeddings=embeddings,
-    )
+    collection.add(ids=ids, documents=documents, metadatas=metadatas, embeddings=embeddings)
+    log.info("Stored %d chunks. Total: %d.", len(chunks), collection.count())
 
 
-def retrieve(query: str, n_results: int = 5) -> list[dict]:
-    """
-    Return the top n_results chunks most relevant to the query.
-
-    Returns:
-        list of {"text": str, "source": str}
-    """
+def retrieve(query: str, n_results: int = DEFAULT_TOP_K) -> list[dict]:
     collection = _get_collection()
-    query_embedding = embed(query)
-
+    log.info("Retrieving top-%d chunks for query: %.80s", n_results, query)
     results = collection.query(
-        query_embeddings=[query_embedding],
+        query_embeddings=[embed(query)],
         n_results=n_results,
         include=["documents", "metadatas"],
     )
-
-    docs = []
-    for text, meta in zip(results["documents"][0], results["metadatas"][0]):
-        docs.append({"text": text, "source": meta.get("source", "unknown")})
+    docs = [
+        {"text": text, "source": meta.get("source", "unknown")}
+        for text, meta in zip(results["documents"][0], results["metadatas"][0])
+    ]
+    log.info("Retrieved %d chunks.", len(docs))
     return docs
+
+
+def collection_stats() -> dict:
+    collection = _get_collection()
+    return {"total_chunks": collection.count(), "collection": COLLECTION_NAME}

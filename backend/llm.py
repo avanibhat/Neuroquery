@@ -1,12 +1,8 @@
-"""
-llm.py — Generate answers using Groq (free tier) as a biomedical Alzheimer's research assistant.
-"""
-
-import os
-from dotenv import load_dotenv
+import logging
 from groq import Groq
+from config import GROQ_API_KEY, GROQ_MODEL
 
-load_dotenv()
+log = logging.getLogger(__name__)
 
 _client = None
 
@@ -25,37 +21,22 @@ When answering:
 def _get_client() -> Groq:
     global _client
     if _client is None:
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
+        if not GROQ_API_KEY:
             raise ValueError("GROQ_API_KEY is not set in .env")
-        _client = Groq(api_key=api_key)
+        _client = Groq(api_key=GROQ_API_KEY)
+        log.info("Groq client initialised (model: %s).", GROQ_MODEL)
     return _client
 
 
 def generate_response(query: str, context_chunks: list[dict]) -> str:
-    """
-    Generate a grounded answer using Groq (Llama 3.3 70B) with retrieved context.
-
-    Args:
-        query:          The user's research question.
-        context_chunks: List of {"text": str, "source": str} from the retriever.
-
-    Returns:
-        The assistant's text response.
-    """
     if not context_chunks:
-        return (
-            "No relevant documents were found in the knowledge base to answer "
-            "your question. Please ingest research documents first."
-        )
+        return "No relevant documents were found. Please ingest research documents first."
 
     context_section = "\n\n".join(
-        f"[{i + 1}] Source: {chunk['source']}\n{chunk['text']}"
-        for i, chunk in enumerate(context_chunks)
+        f"[{i + 1}] Source: {c['source']}\n{c['text']}"
+        for i, c in enumerate(context_chunks)
     )
-
-    user_message = f"""The following context blocks were retrieved from Alzheimer's \
-research literature. Use them to answer the question below.
+    user_message = f"""Context blocks retrieved from Alzheimer's research literature:
 
 --- CONTEXT ---
 {context_section}
@@ -63,14 +44,15 @@ research literature. Use them to answer the question below.
 
 Question: {query}"""
 
-    client = _get_client()
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+    log.info("Calling Groq (%s) with %d context chunks.", GROQ_MODEL, len(context_chunks))
+    response = _get_client().chat.completions.create(
+        model=GROQ_MODEL,
         max_tokens=1024,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_message},
+            {"role": "user",   "content": user_message},
         ],
     )
-
-    return response.choices[0].message.content
+    answer = response.choices[0].message.content
+    log.info("Groq response received (%d chars).", len(answer))
+    return answer
