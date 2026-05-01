@@ -18,7 +18,7 @@ COPY frontend/  ./frontend/
 COPY data/      ./data/
 
 # Set PYTHONPATH so backend modules resolve correctly
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/backend
 
 EXPOSE 8000
 
