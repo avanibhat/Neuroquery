@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+chromadb
+transformers
+torch
+biopython
+requests
+python-dotenv
+groq
+pypdf
+sentence-transformers
+pydantic
+tqdm
