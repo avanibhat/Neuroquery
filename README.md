@@ -1,3 +1,12 @@
+---
+title: NeuroQuery
+emoji: 🧠
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # Alzheimer's Disease Research Assistant
 
 A Retrieval-Augmented Generation (RAG) system for querying Alzheimer's disease
