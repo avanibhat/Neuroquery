@@ -23,7 +23,7 @@ def _get_client() -> Groq:
     if _client is None:
         if not GROQ_API_KEY:
             raise ValueError("GROQ_API_KEY is not set in .env")
-        _client = Groq(api_key=GROQ_API_KEY)
+        _client = Groq(api_key=GROQ_API_KEY, timeout=30.0, max_retries=0)
         log.info("Groq client initialised (model: %s).", GROQ_MODEL)
     return _client
 
