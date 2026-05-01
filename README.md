@@ -9,6 +9,8 @@ pinned: false
 
 # Alzheimer's Disease Research Assistant
 
+🧠 **Live demo:** [https://avanibhat-neuroquery.hf.space](https://avanibhat-neuroquery.hf.space)
+
 A Retrieval-Augmented Generation (RAG) system for querying Alzheimer's disease
 research literature. Combines biomedical-domain embeddings (BioBERT), semantic
 vector search (ChromaDB), and a free LLM (Groq / Llama 3.3 70B) to give
