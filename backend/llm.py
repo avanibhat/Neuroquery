@@ -25,10 +25,7 @@ def _get_client() -> InferenceClient:
     global _client
     if _client is None:
         hf_token = os.getenv("HF_TOKEN")
-        _client = InferenceClient(
-            model=HF_MODEL,
-            token=hf_token,
-        )
+        _client = InferenceClient(token=hf_token)
         log.info("HuggingFace InferenceClient initialised (model: %s).", HF_MODEL)
     return _client
 
@@ -42,24 +39,25 @@ def generate_response(query: str, context_chunks: list[dict]) -> str:
         for i, c in enumerate(context_chunks)
     )
 
-    prompt = f"""<s>[INST] {SYSTEM_PROMPT}
-
-The following context blocks were retrieved from Alzheimer's research literature. Use them to answer the question below.
+    user_message = f"""Context blocks retrieved from Alzheimer's research literature:
 
 --- CONTEXT ---
 {context_section}
 --- END CONTEXT ---
 
-Question: {query} [/INST]"""
+Question: {query}"""
 
     log.info("Calling HF Inference API (%s) with %d context chunks.", HF_MODEL, len(context_chunks))
     client = _get_client()
-    response = client.text_generation(
-        prompt,
-        max_new_tokens=1024,
+    response = client.chat_completion(
+        model=HF_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": user_message},
+        ],
+        max_tokens=1024,
         temperature=0.3,
-        repetition_penalty=1.1,
-        do_sample=True,
     )
-    log.info("Response received (%d chars).", len(response))
-    return response
+    answer = response.choices[0].message.content
+    log.info("Response received (%d chars).", len(answer))
+    return answer
