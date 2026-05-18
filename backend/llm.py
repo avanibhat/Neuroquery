@@ -24,8 +24,8 @@ When answering:
 def _get_client() -> InferenceClient:
     global _client
     if _client is None:
-        hf_token = os.getenv("HF_TOKEN")
-        _client = InferenceClient(token=hf_token)
+        hf_token = os.getenv("HF_TOKEN", "").strip()
+        _client = InferenceClient(token=hf_token or None)
         log.info("HuggingFace InferenceClient initialised (model: %s).", HF_MODEL)
     return _client
 
