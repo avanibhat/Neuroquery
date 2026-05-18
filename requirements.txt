@@ -7,6 +7,7 @@ biopython
 requests
 python-dotenv
 groq
+huggingface_hub
 pypdf
 sentence-transformers
 pydantic

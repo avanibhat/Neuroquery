@@ -1,10 +1,13 @@
 import logging
-from groq import Groq
+import os
+from huggingface_hub import InferenceClient
 from config import GROQ_API_KEY, GROQ_MODEL
 
 log = logging.getLogger(__name__)
 
 _client = None
+
+HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.3"
 
 SYSTEM_PROMPT = """You are an expert biomedical research assistant specialising in \
 Alzheimer's Disease (AD). Your knowledge spans molecular mechanisms, genetics, \
@@ -18,13 +21,15 @@ When answering:
 - Structure longer answers with clear headings or bullet points where helpful."""
 
 
-def _get_client() -> Groq:
+def _get_client() -> InferenceClient:
     global _client
     if _client is None:
-        if not GROQ_API_KEY:
-            raise ValueError("GROQ_API_KEY is not set in .env")
-        _client = Groq(api_key=GROQ_API_KEY, timeout=30.0, max_retries=0)
-        log.info("Groq client initialised (model: %s).", GROQ_MODEL)
+        hf_token = os.getenv("HF_TOKEN")
+        _client = InferenceClient(
+            model=HF_MODEL,
+            token=hf_token,
+        )
+        log.info("HuggingFace InferenceClient initialised (model: %s).", HF_MODEL)
     return _client
 
 
@@ -36,23 +41,25 @@ def generate_response(query: str, context_chunks: list[dict]) -> str:
         f"[{i + 1}] Source: {c['source']}\n{c['text']}"
         for i, c in enumerate(context_chunks)
     )
-    user_message = f"""Context blocks retrieved from Alzheimer's research literature:
+
+    prompt = f"""<s>[INST] {SYSTEM_PROMPT}
+
+The following context blocks were retrieved from Alzheimer's research literature. Use them to answer the question below.
 
 --- CONTEXT ---
 {context_section}
 --- END CONTEXT ---
 
-Question: {query}"""
+Question: {query} [/INST]"""
 
-    log.info("Calling Groq (%s) with %d context chunks.", GROQ_MODEL, len(context_chunks))
-    response = _get_client().chat.completions.create(
-        model=GROQ_MODEL,
-        max_tokens=1024,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": user_message},
-        ],
+    log.info("Calling HF Inference API (%s) with %d context chunks.", HF_MODEL, len(context_chunks))
+    client = _get_client()
+    response = client.text_generation(
+        prompt,
+        max_new_tokens=1024,
+        temperature=0.3,
+        repetition_penalty=1.1,
+        do_sample=True,
     )
-    answer = response.choices[0].message.content
-    log.info("Groq response received (%d chars).", len(answer))
-    return answer
+    log.info("Response received (%d chars).", len(response))
+    return response
