@@ -61,8 +61,7 @@
     .app {
       display: flex;
       height: 100vh;
-      max-width: 1100px;
-      margin: 0 auto;
+      width: 100%;
       background: var(--surface);
       box-shadow: 0 0 40px rgba(0,0,0,.15);
     }
@@ -287,6 +286,20 @@
       border-bottom-left-radius: 3px;
       box-shadow: 0 1px 6px rgba(0,0,0,.06);
     }
+
+    /* ── Markdown inside bot bubbles ──────────────── */
+    .msg-row.bot .bubble h1,
+    .msg-row.bot .bubble h2,
+    .msg-row.bot .bubble h3 { color: var(--navy); margin: .6rem 0 .2rem; font-size: .95rem; }
+    [data-theme="dark"] .msg-row.bot .bubble h1,
+    [data-theme="dark"] .msg-row.bot .bubble h2,
+    [data-theme="dark"] .msg-row.bot .bubble h3 { color: var(--accent-dim); }
+    .msg-row.bot .bubble p  { margin: .25rem 0; }
+    .msg-row.bot .bubble ul { padding-left: 1.2rem; margin: .25rem 0; }
+    .msg-row.bot .bubble li { margin-bottom: .2rem; }
+    .msg-row.bot .bubble code { background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: .82em; }
+    .msg-row.bot .bubble strong { color: var(--navy); }
+    [data-theme="dark"] .msg-row.bot .bubble strong { color: var(--accent-dim); }
 
     /* ── Source chips ──────────────────────────────── */
     .sources { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .45rem; padding: 0 2px; }
@@ -573,7 +586,11 @@
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.textContent = text;
+    if (role === 'bot') {
+      bubble.innerHTML = markdownToHtml(text);
+    } else {
+      bubble.textContent = text;
+    }
     row.appendChild(bubble);
 
     if (sources.length) {
@@ -698,6 +715,47 @@
     icon.innerHTML = isDark
       ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
       : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+
+  // ── Markdown renderer ────────────────────────────────
+  function markdownToHtml(text) {
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    const lines = escaped.split('\n');
+    const out = [];
+    let inList = false;
+
+    for (const raw of lines) {
+      const line = raw.trimEnd();
+      const bullet = line.match(/^[-*] (.+)/);
+      const h3    = line.match(/^### (.+)/);
+      const h2    = line.match(/^## (.+)/);
+      const h1    = line.match(/^# (.+)/);
+
+      if (bullet) {
+        if (!inList) { out.push('<ul>'); inList = true; }
+        out.push(`<li>${inline(bullet[1])}</li>`);
+      } else {
+        if (inList) { out.push('</ul>'); inList = false; }
+        if      (h3)         out.push(`<h3>${inline(h3[1])}</h3>`);
+        else if (h2)         out.push(`<h2>${inline(h2[1])}</h2>`);
+        else if (h1)         out.push(`<h1>${inline(h1[1])}</h1>`);
+        else if (line === '') out.push('<br>');
+        else                 out.push(`<p>${inline(line)}</p>`);
+      }
+    }
+    if (inList) out.push('</ul>');
+    return out.join('');
+  }
+
+  function inline(t) {
+    return t
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+      .replace(/`(.+?)`/g,       '<code>$1</code>');
   }
 
   // ── Init ──────────────────────────────────────────────

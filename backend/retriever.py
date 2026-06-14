@@ -1,7 +1,10 @@
 import logging
 
+import numpy as np
 import torch
 import chromadb
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer, AutoModel
 from tqdm import tqdm
 
@@ -9,9 +12,11 @@ from config import BIOBERT_MODEL, CHROMA_PATH, COLLECTION_NAME, DEFAULT_TOP_K
 
 log = logging.getLogger(__name__)
 
-_tokenizer = None
-_model = None
-_client = None
+# ── BioBERT ─────────────────────────────────────────────────────────────────
+
+_tokenizer  = None
+_model      = None
+_client     = None
 _collection = None
 
 
@@ -20,7 +25,7 @@ def _load_model():
     if _tokenizer is None:
         log.info("Loading BioBERT model: %s", BIOBERT_MODEL)
         _tokenizer = AutoTokenizer.from_pretrained(BIOBERT_MODEL)
-        _model = AutoModel.from_pretrained(BIOBERT_MODEL)
+        _model     = AutoModel.from_pretrained(BIOBERT_MODEL)
         _model.eval()
         log.info("BioBERT loaded.")
 
@@ -36,11 +41,13 @@ def embed(text: str) -> list[float]:
     return pooled.squeeze(0).tolist()
 
 
+# ── ChromaDB ─────────────────────────────────────────────────────────────────
+
 def _get_collection():
     global _client, _collection
     if _collection is None:
         log.info("Connecting to ChromaDB at %s", CHROMA_PATH)
-        _client = chromadb.PersistentClient(path=CHROMA_PATH)
+        _client     = chromadb.PersistentClient(path=CHROMA_PATH)
         _collection = _client.get_or_create_collection(
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
@@ -67,8 +74,9 @@ def add_documents(chunks: list[dict]) -> None:
 
 
 def retrieve(query: str, n_results: int = DEFAULT_TOP_K) -> list[dict]:
+    """BioBERT semantic retrieval."""
     collection = _get_collection()
-    log.info("Retrieving top-%d chunks for query: %.80s", n_results, query)
+    log.info("BioBERT retrieving top-%d for: %.80s", n_results, query)
     results = collection.query(
         query_embeddings=[embed(query)],
         n_results=n_results,
@@ -85,3 +93,44 @@ def retrieve(query: str, n_results: int = DEFAULT_TOP_K) -> list[dict]:
 def collection_stats() -> dict:
     collection = _get_collection()
     return {"total_chunks": collection.count(), "collection": COLLECTION_NAME}
+
+
+# ── TF-IDF retriever ─────────────────────────────────────────────────────────
+
+_tfidf_vectorizer = None
+_tfidf_matrix     = None
+_tfidf_docs: list[dict] = []
+
+
+def _build_tfidf():
+    global _tfidf_vectorizer, _tfidf_matrix, _tfidf_docs
+    log.info("Building TF-IDF index from ChromaDB...")
+    collection = _get_collection()
+    result     = collection.get(include=["documents", "metadatas"])
+
+    documents  = result["documents"]
+    metadatas  = result["metadatas"]
+    _tfidf_docs = [
+        {"text": d, "source": m.get("source", "unknown")}
+        for d, m in zip(documents, metadatas)
+    ]
+
+    _tfidf_vectorizer = TfidfVectorizer(stop_words="english", max_features=20000)
+    _tfidf_matrix     = _tfidf_vectorizer.fit_transform(documents)
+    log.info("TF-IDF index built: %d documents, %d features.",
+             len(documents), _tfidf_matrix.shape[1])
+
+
+def retrieve_tfidf(query: str, n_results: int = DEFAULT_TOP_K) -> list[dict]:
+    """TF-IDF keyword retrieval over the same ChromaDB corpus."""
+    if _tfidf_vectorizer is None:
+        _build_tfidf()
+
+    log.info("TF-IDF retrieving top-%d for: %.80s", n_results, query)
+    query_vec = _tfidf_vectorizer.transform([query])
+    scores    = cosine_similarity(query_vec, _tfidf_matrix)[0]
+    top_idx   = np.argsort(scores)[::-1][:n_results]
+
+    docs = [_tfidf_docs[i] for i in top_idx if scores[i] > 0]
+    log.info("TF-IDF retrieved %d chunks.", len(docs))
+    return docs

@@ -26,7 +26,7 @@ DEFAULT_TOP_K    = 5
 
 # PubMed
 PUBMED_QUERY     = "Alzheimer's disease"
-PUBMED_MAX       = 100
+PUBMED_MAX       = 500
 
 # API / credentials
 GROQ_API_KEY     = os.getenv("GROQ_API_KEY")

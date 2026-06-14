@@ -23,6 +23,9 @@ build/
 data/docs/*.pdf
 data/docs/*.txt
 
+# Local runtime state
+data/history.json
+
 # OS
 .DS_Store
 Thumbs.db
