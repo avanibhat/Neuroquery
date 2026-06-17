@@ -64,15 +64,40 @@ Evaluated on 20 questions across 5 categories. Full scores in [`eval_results_100
 
 ### BioBERT vs TF-IDF (500 abstracts)
 
-*Run `make eval` then `make eval-tfidf` to populate.*
+Full scores in [`eval_results_biobert.json`](eval_results_biobert.json) and [`eval_results_tfidf.json`](eval_results_tfidf.json).
 
 | Metric | BioBERT | TF-IDF | Delta |
 |--------|---------|--------|-------|
-| Mean Precision@5 | — | — | — |
-| Mean MRR | — | — | — |
-| Hit Rate | — | — | — |
-| Mean Faithfulness | — | — | — |
-| Completeness Rate | — | — | — |
+| Mean Precision@5 | 0.26 | 0.27 | +0.01 |
+| Mean MRR | 0.48 | 0.53 | +0.05 |
+| Hit Rate | 0.70 | 0.65 | -0.05 |
+| Mean Faithfulness | 0.33 | 0.46 | +0.13 |
+| Completeness Rate | 0.90 | 0.90 | 0.00 |
+
+#### Per-question breakdown
+
+| # | Question | BB P@5 | BB MRR | BB Hit | TF P@5 | TF MRR | TF Hit |
+|---|----------|--------|--------|--------|--------|--------|--------|
+| 1 | Earliest blood-based biomarkers? | 0.00 | 0.00 | N | 0.20 | 0.25 | Y |
+| 2 | pTau-217 as biomarker? | 0.20 | 0.33 | Y | 0.00 | 0.00 | N |
+| 3 | Aβ 42/40 ratio in diagnosis? | 0.00 | 0.00 | N | 0.00 | 0.00 | N |
+| 4 | CSF biomarkers for diagnosis? | 0.20 | 0.25 | Y | 0.20 | 0.20 | Y |
+| 5 | APOE4 allele and risk? | 0.40 | 1.00 | Y | 0.60 | 1.00 | Y |
+| 6 | Early-onset familial AD genes? | 0.20 | 0.33 | Y | 0.00 | 0.00 | N |
+| 7 | TREM2 variant effect? | 0.00 | 0.00 | N | 0.00 | 0.00 | N |
+| 8 | APP gene mutation significance? | 0.00 | 0.00 | N | 0.60 | 1.00 | Y |
+| 9 | Lecanemab mechanism? | 0.00 | 0.00 | N | 0.00 | 0.00 | N |
+| 10 | Tau-targeting therapies? | 0.20 | 1.00 | Y | 0.20 | 1.00 | Y |
+| 11 | FDA-approved treatments? | 0.20 | 0.33 | Y | 0.00 | 0.00 | N |
+| 12 | Anti-amyloid immunotherapy? | 0.60 | 0.50 | Y | 0.40 | 1.00 | Y |
+| 13 | Aβ accumulation → neurodegeneration? | 0.40 | 1.00 | Y | 0.20 | 1.00 | Y |
+| 14 | Amyloid cascade hypothesis? | 0.40 | 1.00 | Y | 0.60 | 1.00 | Y |
+| 15 | Neurofibrillary tangle formation? | 0.20 | 1.00 | Y | 0.40 | 1.00 | Y |
+| 16 | Neuroinflammation in AD? | 0.80 | 1.00 | Y | 0.60 | 1.00 | Y |
+| 17 | PET imaging in diagnosis? | 0.40 | 0.50 | Y | 0.80 | 1.00 | Y |
+| 18 | Cognitive assessments for severity? | 0.40 | 0.33 | Y | 0.00 | 0.00 | N |
+| 19 | Structural MRI in diagnosis? | 0.60 | 1.00 | Y | 0.40 | 1.00 | Y |
+| 20 | Preclinical AD diagnostic criteria? | 0.00 | 0.00 | N | 0.20 | 0.20 | Y |
 
 ```bash
 make eval          # saves eval_results_biobert.json
@@ -84,22 +109,36 @@ make eval-compare  # prints side-by-side delta table
 
 ## Observations
 
-### Expected Findings
+The 500-abstract corpus improves both retrievers substantially over the 100-abstract
+baseline (Precision@5 roughly 0.16 → 0.26-0.27). The two retrievers land close together
+on aggregate, but differ meaningfully on individual questions:
 
-**BioBERT** is expected to outperform TF-IDF on:
-- Questions with semantic paraphrasing (e.g. "what makes APOE4 risky" vs "APOE4 risk mechanism")
-- Questions using medical synonyms (e.g. "cognitive decline" ≈ "dementia progression")
+**BioBERT outperforms TF-IDF** on questions phrased with synonyms or indirect language
+not present verbatim in the abstracts (Q2 "pTau-217 as biomarker", Q6 "early-onset
+familial AD genes", Q11 "FDA-approved treatments", Q18 "cognitive assessments").
+These are cases where dense semantic embeddings capture meaning that exact keyword
+matching misses.
 
-**TF-IDF** is expected to outperform BioBERT on:
-- Questions with rare proper nouns (e.g. drug names: "lecanemab", "donanemab")
-- Questions targeting specific gene names or acronyms (e.g. "TREM2", "pTau-217")
-- Situations where the exact terminology appears verbatim in abstracts
+**TF-IDF outperforms BioBERT** on questions containing rare, distinctive terms that
+appear verbatim in the corpus (Q1 "blood-based biomarkers", Q8 "APP gene mutation",
+Q17 "PET imaging"). Sparse retrieval excels when the question's vocabulary closely
+matches the source text.
+
+**Neither retriever handles well:** Q3 (amyloid-beta 42/40 ratio), Q7 (TREM2 variant),
+and Q9 (lecanemab mechanism) score zero hits on both retrievers — likely a corpus gap
+where the 500 abstracts don't contain enough detail on these specific subtopics.
+
+Faithfulness is notably higher for TF-IDF (0.46 vs 0.33) despite similar precision,
+suggesting that when TF-IDF retrieves a relevant chunk it tends to be more directly
+on-topic (lower noise), giving the LLM cleaner context to ground its answer in.
 
 ### Complementarity
 
-The two retrievers are complementary by design. A production system could use a
-**hybrid retrieval** strategy: rank by a weighted sum of BioBERT cosine similarity
-and TF-IDF cosine similarity, or use Reciprocal Rank Fusion (RRF).
+The two retrievers are complementary in practice, not just in theory: this data shows
+each one wins on different question types. A production system could use a
+**hybrid retrieval** strategy — rank by a weighted sum of BioBERT cosine similarity
+and TF-IDF cosine similarity, or use Reciprocal Rank Fusion (RRF) — to capture both
+semantic and keyword-exact matches.
 
 ---
 

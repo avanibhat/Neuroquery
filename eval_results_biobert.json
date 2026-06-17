@@ -1,0 +1,233 @@
+{
+  "retriever": "biobert",
+  "aggregate": {
+    "questions_evaluated": 20,
+    "mean_precision_at_5": 0.26,
+    "mean_mrr": 0.479,
+    "hit_rate": 0.7,
+    "mean_faithfulness": 0.33,
+    "completeness_rate": 0.9
+  },
+  "questions": [
+    {
+      "id": 1,
+      "question": "What are the earliest blood-based biomarkers for Alzheimer's disease?",
+      "precision_at_5": 0.0,
+      "mrr": 0.0,
+      "hit": false,
+      "relevant_chunks": 0,
+      "faithfulness": 0.0,
+      "complete": false,
+      "answer_excerpt": "### Earliest Blood-Based Biomarkers for Alzheimer's Disease  The provided context blocks do not explicitly focus on the earliest blood-based biomarkers for Alzheimer's disease (AD). However, they discuss various aspects of AD and other dementias, including potential biomarkers and diagnostic approac"
+    },
+    {
+      "id": 2,
+      "question": "How does phosphorylated tau 217 serve as a biomarker for Alzheimer's disease?",
+      "precision_at_5": 0.2,
+      "mrr": 0.3333,
+      "hit": true,
+      "relevant_chunks": 1,
+      "faithfulness": 0.8,
+      "complete": true,
+      "answer_excerpt": "### Phosphorylated Tau 217 as a Biomarker for Alzheimer's Disease  Based on the provided context, phosphorylated tau 217 (p-tau217) is mentioned in sources [3] and [4] as a biomarker for Alzheimer's disease (AD).  #### Association with AD Progression  Source [3] suggests that p-tau217, when combined"
+    },
+    {
+      "id": 3,
+      "question": "What is the significance of the amyloid-beta 42/40 ratio in diagnosing Alzheimer's disease?",
+      "precision_at_5": 0.0,
+      "mrr": 0.0,
+      "hit": false,
+      "relevant_chunks": 0,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "The provided context blocks do not mention the significance of the amyloid-beta 42/40 ratio in diagnosing Alzheimer's disease. The context blocks discuss various topics related to Alzheimer's disease, including:  * Clinical and MRI features associated with amyloid positivity * Thalamic nuclei volume"
+    },
+    {
+      "id": 4,
+      "question": "Which cerebrospinal fluid biomarkers are used to diagnose Alzheimer's disease?",
+      "precision_at_5": 0.2,
+      "mrr": 0.25,
+      "hit": true,
+      "relevant_chunks": 1,
+      "faithfulness": 0.8,
+      "complete": true,
+      "answer_excerpt": "Based on the provided context blocks, the specific cerebrospinal fluid (CSF) biomarkers used to diagnose Alzheimer's disease are not explicitly mentioned. However, source [2] mentions that patients underwent \"either amyloid positron emission tomography (PET) or cerebrospinal fluid biomarker testing\""
+    },
+    {
+      "id": 5,
+      "question": "What is the role of the APOE4 allele in Alzheimer's disease risk?",
+      "precision_at_5": 0.4,
+      "mrr": 1.0,
+      "hit": true,
+      "relevant_chunks": 2,
+      "faithfulness": 0.8,
+      "complete": true,
+      "answer_excerpt": "### Introduction to APOE4 and Alzheimer's Disease  The APOE4 allele is a well-established genetic risk factor for Alzheimer's disease (AD). To understand its role, we must consider the provided context blocks.  ### Association with Amyloid Burden  According to [1], APOE genotype is associated with a"
+    },
+    {
+      "id": 6,
+      "question": "Which genes are associated with early-onset familial Alzheimer's disease?",
+      "precision_at_5": 0.2,
+      "mrr": 0.3333,
+      "hit": true,
+      "relevant_chunks": 1,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "Based on the provided context, the following genes are mentioned as being associated with Alzheimer's disease (AD), but not specifically early-onset familial AD:  * APOE (associated with late-onset AD) * CLU * CTSB * HLA-DRB1 * SLC12A5 * SYT13 * TOMM7 * CHMP2B (associated with frontotemporal dementi"
+    },
+    {
+      "id": 7,
+      "question": "How does the TREM2 gene variant affect Alzheimer's disease risk?",
+      "precision_at_5": 0.0,
+      "mrr": 0.0,
+      "hit": false,
+      "relevant_chunks": 0,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "The provided context blocks do not mention the TREM2 gene variant or its effect on Alzheimer's disease risk. The context blocks discuss various topics related to Alzheimer's disease, including:  * Endolysosomal dysfunction and the CHMP2B gene variant (Source: pubmed:42246690) * Associations between "
+    },
+    {
+      "id": 8,
+      "question": "What is the significance of the APP gene mutation in Alzheimer's disease?",
+      "precision_at_5": 0.0,
+      "mrr": 0.0,
+      "hit": false,
+      "relevant_chunks": 0,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "**Insufficient Context**  The provided context blocks do not mention the APP gene mutation or its significance in Alzheimer's disease. The context blocks discuss various topics related to Alzheimer's disease, including:  * The relationship between APOE genotype, amyloid burden, and tau pathology (So"
+    },
+    {
+      "id": 9,
+      "question": "What is the mechanism of action of lecanemab in treating Alzheimer's disease?",
+      "precision_at_5": 0.0,
+      "mrr": 0.0,
+      "hit": false,
+      "relevant_chunks": 0,
+      "faithfulness": 0.2,
+      "complete": true,
+      "answer_excerpt": "The provided context blocks do not explicitly describe the mechanism of action of lecanemab in treating Alzheimer's disease. However, based on the general understanding of lecanemab as an anti-amyloid therapy, it can be inferred that its mechanism of action involves targeting and reducing amyloid-be"
+    },
+    {
+      "id": 10,
+      "question": "How do tau-targeting therapies work in Alzheimer's disease treatment?",
+      "precision_at_5": 0.2,
+      "mrr": 1.0,
+      "hit": true,
+      "relevant_chunks": 1,
+      "faithfulness": 0.6,
+      "complete": true,
+      "answer_excerpt": "### Introduction to Tau-Targeting Therapies  Tau-targeting therapies are a promising approach in the treatment of Alzheimer's Disease (AD), focusing on the tau protein abnormalities that are more detrimental to neurocognitive function and behavior than amyloid plaque formation.  ### Mechanism of Act"
+    },
+    {
+      "id": 11,
+      "question": "What are the current FDA-approved treatments for Alzheimer's disease?",
+      "precision_at_5": 0.2,
+      "mrr": 0.3333,
+      "hit": true,
+      "relevant_chunks": 1,
+      "faithfulness": 0.8,
+      "complete": true,
+      "answer_excerpt": "Based on the provided context blocks, the current FDA-approved treatments for Alzheimer's disease are not explicitly listed. However, it is mentioned in [3] that \"The approval of anti-amyloid therapies has expanded therapeutic options for patients with Alzheimer's disease (AD)\" and specifically ment"
+    },
+    {
+      "id": 12,
+      "question": "What is the role of anti-amyloid immunotherapy in Alzheimer's disease?",
+      "precision_at_5": 0.6,
+      "mrr": 0.5,
+      "hit": true,
+      "relevant_chunks": 3,
+      "faithfulness": 0.6,
+      "complete": true,
+      "answer_excerpt": "### Introduction to Anti-Amyloid Immunotherapy  Anti-amyloid immunotherapy is a therapeutic approach aimed at targeting amyloid-beta (A\u03b2) peptides, which are a hallmark of Alzheimer's disease (AD) pathology. The accumulation of A\u03b2 peptides leads to the formation of harmful amyloid plaques, contribut"
+    },
+    {
+      "id": 13,
+      "question": "How does amyloid-beta accumulation lead to neurodegeneration in Alzheimer's disease?",
+      "precision_at_5": 0.4,
+      "mrr": 1.0,
+      "hit": true,
+      "relevant_chunks": 2,
+      "faithfulness": 0.4,
+      "complete": false,
+      "answer_excerpt": "### Introduction to Amyloid-Beta Accumulation in Alzheimer's Disease  Amyloid-beta (A\u03b2) accumulation is a hallmark of Alzheimer's disease (AD) and plays a central role in the pathogenesis of the disease. The provided context blocks offer insights into the mechanisms by which A\u03b2 accumulation contribu"
+    },
+    {
+      "id": 14,
+      "question": "What is the amyloid cascade hypothesis in Alzheimer's disease?",
+      "precision_at_5": 0.4,
+      "mrr": 1.0,
+      "hit": true,
+      "relevant_chunks": 2,
+      "faithfulness": 0.8,
+      "complete": true,
+      "answer_excerpt": "The provided context blocks do not explicitly define the amyloid cascade hypothesis. However, based on the information given, it can be inferred that the amyloid cascade hypothesis is a traditional theory that positions amyloid-\u03b2 (A\u03b2) deposition as a key event in the development of Alzheimer's disea"
+    },
+    {
+      "id": 15,
+      "question": "How do neurofibrillary tangles form and contribute to Alzheimer's disease?",
+      "precision_at_5": 0.2,
+      "mrr": 1.0,
+      "hit": true,
+      "relevant_chunks": 1,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "### Neurofibrillary Tangles in Alzheimer's Disease  The provided context blocks do not explicitly detail the formation of neurofibrillary tangles (NFTs) but highlight their role as a key pathological feature of Alzheimer's disease (AD), alongside extracellular senile plaques (A\u03b2).   #### Composition"
+    },
+    {
+      "id": 16,
+      "question": "What is the role of neuroinflammation in Alzheimer's disease progression?",
+      "precision_at_5": 0.8,
+      "mrr": 1.0,
+      "hit": true,
+      "relevant_chunks": 4,
+      "faithfulness": 0.4,
+      "complete": true,
+      "answer_excerpt": "### Introduction to Neuroinflammation in Alzheimer's Disease  Neuroinflammation plays a significant role in the progression of Alzheimer's Disease (AD). According to the provided context blocks, neuroinflammation is intricately linked with the pathogenesis of AD, influencing key aspects such as amyl"
+    },
+    {
+      "id": 17,
+      "question": "How is PET imaging used in the diagnosis of Alzheimer's disease?",
+      "precision_at_5": 0.4,
+      "mrr": 0.5,
+      "hit": true,
+      "relevant_chunks": 2,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "### PET Imaging in Alzheimer's Disease Diagnosis  Based on the provided context blocks, PET imaging is utilized in the diagnosis of Alzheimer's disease as a tool for confirmatory biomarker testing, specifically for detecting amyloid positivity.  * In the study mentioned in [2], patients underwent ei"
+    },
+    {
+      "id": 18,
+      "question": "What cognitive assessments are used to evaluate Alzheimer's disease severity?",
+      "precision_at_5": 0.4,
+      "mrr": 0.3333,
+      "hit": true,
+      "relevant_chunks": 2,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "### Cognitive Assessments for Alzheimer's Disease Severity  Based on the provided context blocks, several cognitive assessments are mentioned as being used to evaluate Alzheimer's disease severity. These include:  * **Mini-Mental State Examination (MMSE)** and **Montreal Cognitive Assessment (MoCA)*"
+    },
+    {
+      "id": 19,
+      "question": "How does structural MRI help in diagnosing Alzheimer's disease?",
+      "precision_at_5": 0.6,
+      "mrr": 1.0,
+      "hit": true,
+      "relevant_chunks": 3,
+      "faithfulness": 0.0,
+      "complete": true,
+      "answer_excerpt": "### Introduction to Structural MRI in Alzheimer's Disease Diagnosis  Structural MRI plays a significant role in the diagnosis of Alzheimer's disease (AD) by providing valuable information on brain structure and atrophy.   ### Key Findings from Context Blocks  - **Medial-temporal-whole-brain atrophy "
+    },
+    {
+      "id": 20,
+      "question": "What are the diagnostic criteria for preclinical Alzheimer's disease?",
+      "precision_at_5": 0.0,
+      "mrr": 0.0,
+      "hit": false,
+      "relevant_chunks": 0,
+      "faithfulness": 0.4,
+      "complete": true,
+      "answer_excerpt": "### Diagnostic Criteria for Preclinical Alzheimer's Disease  The provided context blocks do not explicitly outline the diagnostic criteria for preclinical Alzheimer's disease. However, they do offer insights into various aspects related to Alzheimer's disease (AD) diagnosis and biomarkers.  From the"
+    }
+  ]
+}

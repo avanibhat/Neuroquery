@@ -285,7 +285,7 @@ def main():
         prior_results = load_completed(out_path)
         completed_ids = {r["id"] for r in prior_results}
         if completed_ids:
-            print(f"  Resuming — skipping {len(completed_ids)} completed questions.")
+            print(f"  Resuming - skipping {len(completed_ids)} completed questions.")
 
     remaining = [(i + 1, q) for i, q in enumerate(questions) if (i + 1) not in completed_ids]
 
@@ -309,7 +309,7 @@ def main():
     agg = compute_aggregate(results)
     with open(out_path, "w") as f:
         json.dump({"retriever": args.retriever, "aggregate": agg, "questions": results}, f, indent=2)
-    print(f"\nResults saved → {out_path}")
+    print(f"\nResults saved -> {out_path}")
 
     print_summary(results, agg, args.retriever)
 

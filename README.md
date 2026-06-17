@@ -249,17 +249,21 @@ Results are saved to `eval_results_biobert.json` / `eval_results_tfidf.json`. Fu
 
 ## Results
 
-*Run `make eval && make eval-tfidf && make eval-compare` to populate.*
+Evaluated on 20 questions across 5 categories (biomarkers, genetics, therapeutics,
+mechanisms, diagnostics), judged by Llama 3.3 70B, against the 500-abstract corpus.
 
 | Metric | BioBERT | TF-IDF |
 |--------|---------|--------|
-| Mean Precision@5 | — | — |
-| Mean MRR | — | — |
-| Hit Rate | — | — |
-| Mean Faithfulness | — | — |
-| Completeness Rate | — | — |
+| Mean Precision@5 | 0.26 | 0.27 |
+| Mean MRR | 0.48 | 0.53 |
+| Hit Rate | 70% | 65% |
+| Mean Faithfulness | 0.33 | 0.46 |
+| Completeness Rate | 90% | 90% |
 
-See [EVALUATION.md](EVALUATION.md) for the per-question breakdown and analysis.
+The two retrievers perform comparably overall but diverge on individual questions —
+BioBERT wins on synonym-heavy phrasing, TF-IDF wins when the question's wording
+matches the source text closely. See [EVALUATION.md](EVALUATION.md) for the
+per-question breakdown and analysis.
 
 ---
 
