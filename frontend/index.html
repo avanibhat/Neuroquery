@@ -718,13 +718,26 @@
   }
 
   // ── Markdown renderer ────────────────────────────────
+  // Some LLM responses cram multiple bullets onto one line ("text: * a * b * c")
+  // instead of real newlines. Split those onto separate lines before parsing
+  // so they render as a list instead of literal asterisks.
+  function normalizeInlineBullets(text) {
+    return text.split('\n').map(line => {
+      const matches = line.match(/ [-*] (?=\S)/g);
+      if (matches && matches.length >= 2) {
+        return line.replace(/ [-*] (?=\S)/g, '\n- ');
+      }
+      return line;
+    }).join('\n');
+  }
+
   function markdownToHtml(text) {
     const escaped = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    const lines = escaped.split('\n');
+    const lines = normalizeInlineBullets(escaped).split('\n');
     const out = [];
     let inList = false;
 

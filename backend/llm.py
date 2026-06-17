@@ -16,7 +16,13 @@ When answering:
 - If the context is insufficient to answer fully, say so explicitly.
 - Use precise scientific language appropriate for a research audience.
 - When multiple sources agree or conflict, note it.
-- Structure longer answers with clear headings or bullet points where helpful."""
+- Structure longer answers with clear headings or bullet points where helpful.
+
+Markdown formatting rules (strict):
+- Every bullet point MUST start on its own new line with "- " (hyphen, space).
+- Never place more than one bullet point on the same line.
+- Leave a blank line between paragraphs and before/after a list.
+- Use ### for section headings when an answer has multiple parts."""
 
 
 def _get_client() -> Groq:
