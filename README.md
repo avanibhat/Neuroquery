@@ -193,6 +193,7 @@ neuroquery/
 │   └── docs/          # Drop PDFs here for local ingestion
 ├── frontend/
 │   └── index.html     # Chat UI (vanilla JS, dark/light mode)
+├── mcp_server.py      # MCP server — exposes RAG tools via Model Context Protocol
 ├── requirements.txt   # pinned dependencies
 ├── Makefile           # ingest / eval / eval-tfidf / eval-compare / test
 ├── EVALUATION.md      # retriever comparison methodology and results
@@ -264,6 +265,51 @@ The two retrievers perform comparably overall but diverge on individual question
 BioBERT wins on synonym-heavy phrasing, TF-IDF wins when the question's wording
 matches the source text closely. See [EVALUATION.md](EVALUATION.md) for the
 per-question breakdown and analysis.
+
+---
+
+## MCP Server (Model Context Protocol)
+
+NeuroQuery also ships as an **MCP server**, letting any MCP-compatible client
+(Claude Desktop, VS Code Copilot, custom agents) use the RAG pipeline as a tool.
+
+### Available tools
+
+| Tool | Description |
+|------|-------------|
+| `search_literature` | BioBERT semantic search over the indexed corpus |
+| `search_literature_tfidf` | TF-IDF keyword search (baseline) |
+| `ask_research_question` | Full RAG pipeline — retrieve + generate a grounded answer |
+| `get_collection_stats` | Number of indexed chunks and collection info |
+| `ingest_documents` | Trigger document ingestion from PubMed / local PDFs |
+
+### Quick start
+
+```bash
+pip install "mcp[cli]>=1.0.0"
+python mcp_server.py
+```
+
+### Claude Desktop configuration
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "neuroquery": {
+      "command": "python",
+      "args": ["/absolute/path/to/alzheimers-rag/mcp_server.py"],
+      "env": {
+        "GROQ_API_KEY": "gsk_..."
+      }
+    }
+  }
+}
+```
+
+Once connected, Claude can search Alzheimer's literature and answer research
+questions using the same BioBERT + ChromaDB pipeline that powers the web UI.
 
 ---
 
