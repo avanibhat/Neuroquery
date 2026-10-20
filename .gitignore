@@ -34,3 +34,11 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Frontend
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+
+# Old template with empty placeholder scores (real results in EVALUATION.md)
+eval_results.md

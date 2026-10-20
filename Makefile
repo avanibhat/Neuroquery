@@ -7,13 +7,17 @@
 #   make eval-tfidf       — run full TF-IDF evaluation (20 questions)
 #   make eval-compare     — print side-by-side comparison of both retrievers
 #   make test             — run pytest suite
+#   make web-install      — install frontend deps (npm ci in web/)
+#   make web-dev          — run the Vite dev server
+#   make web-build        — build the React frontend
+#   make web-test         — typecheck + run frontend tests
 
 PYTHONPATH := backend
 PYTHON     := python
 
 export PYTHONPATH
 
-.PHONY: ingest eval eval-tfidf eval-compare test
+.PHONY: ingest eval eval-tfidf eval-compare test web-install web-dev web-build web-test
 
 ingest:
 	$(PYTHON) backend/ingest.py
@@ -70,3 +74,15 @@ EOF
 
 test:
 	$(PYTHON) -m pytest tests/ -v
+
+web-install:
+	cd web && npm ci
+
+web-dev:
+	cd web && npm run dev
+
+web-build:
+	cd web && npm run build
+
+web-test:
+	cd web && npm run typecheck && npm test

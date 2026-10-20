@@ -1,3 +1,12 @@
+# ── Stage 1: build the React + TypeScript frontend ───────────────────────────
+FROM node:20-slim AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY web/ ./
+RUN npm run build
+
+# ── Stage 2: Python API ──────────────────────────────────────────────────────
 FROM python:3.11-slim
 
 # System dependencies required by torch and chromadb
@@ -16,6 +25,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/   ./backend/
 COPY frontend/  ./frontend/
 COPY data/      ./data/
+COPY eval_results_biobert.json eval_results_tfidf.json ./
+
+# Built frontend from stage 1 (served by FastAPI at /)
+COPY --from=web /web/dist ./web/dist
 
 # Set PYTHONPATH so backend modules resolve correctly
 ENV PYTHONPATH=/app/backend

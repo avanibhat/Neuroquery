@@ -10,7 +10,12 @@ BASE_DIR = Path(__file__).parent.parent
 CHROMA_PATH      = str(BASE_DIR / "chroma_store")
 DOCS_DIR         = BASE_DIR / "data" / "docs"
 HISTORY_FILE     = BASE_DIR / "data" / "history.json"
-FRONTEND_PATH    = BASE_DIR / "frontend" / "index.html"
+FRONTEND_PATH    = BASE_DIR / "frontend" / "index.html"   # legacy vanilla JS UI
+WEB_DIST_DIR     = BASE_DIR / "web" / "dist"              # React + TypeScript UI (npm run build)
+EVAL_FILES       = {
+    "biobert": BASE_DIR / "eval_results_biobert.json",
+    "tfidf":   BASE_DIR / "eval_results_tfidf.json",
+}
 
 # Models
 BIOBERT_MODEL    = "dmis-lab/biobert-v1.1"

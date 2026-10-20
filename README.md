@@ -16,6 +16,8 @@ research literature. Combines biomedical-domain embeddings (BioBERT), semantic
 vector search (ChromaDB), and a free LLM (Groq / Llama 3.3 70B) to give
 grounded, source-cited answers to research questions.
 
+![NeuroQuery answer with clickable citations and the evidence panel](docs/screenshot.png)
+
 > All answers are backed by PubMed abstracts and optional local PDFs.  
 > No data is stored externally — your documents stay on your machine.
 
@@ -57,15 +59,16 @@ grounded, source-cited answers to research questions.
                                 ▼
          ┌─────────────────────────────────────────────────┐
          │                  main.py  (FastAPI)             │
-         │  GET  /          → frontend/index.html          │
-         │  POST /chat      → retrieve + generate          │
+         │  GET  /          → React app (web/dist)         │
+         │  POST /chat      → answer + passages + timing   │
+         │  GET  /eval      → evaluation scores            │
          │  POST /ingest    → re-run ingestion pipeline    │
          └──────────────────────┬──────────────────────────┘
                                 │
                                 ▼
          ┌─────────────────────────────────────────────────┐
-         │           frontend/index.html                   │
-         │  Vanilla JS chat UI · Source chips · Re-index   │
+         │        web/  (React + TypeScript, Vite)         │
+         │  Chat · clickable citations · evidence panel    │
          └─────────────────────────────────────────────────┘
 ```
 
@@ -81,7 +84,8 @@ grounded, source-cited answers to research questions.
 | Literature   | PubMed via Biopython Entrez API  | Open-access Alzheimer's abstracts         |
 | Local docs   | pypdf                            | Extract text from researcher-supplied PDFs|
 | API server   | FastAPI + Uvicorn                | REST endpoints + static frontend serving  |
-| Frontend     | Vanilla HTML / CSS / JS          | Zero-dependency chat interface            |
+| Frontend     | React 18 + TypeScript (Vite)     | Chat UI with citation-linked evidence panel |
+| Testing      | pytest · Vitest + Testing Library | API contract and UI behaviour tests       |
 
 ---
 
@@ -131,7 +135,7 @@ Drop any Alzheimer's research PDFs into `data/docs/`.
 python backend/ingest.py
 ```
 
-Fetches 100 PubMed abstracts, embeds everything with BioBERT, stores vectors in `chroma_store/`. Takes ~5–15 minutes on CPU (one-time).
+Fetches 500 PubMed abstracts, embeds everything with BioBERT, stores vectors in `chroma_store/`. Takes ~5–15 minutes on CPU (one-time).
 
 ### 7. Start the server
 
@@ -145,7 +149,58 @@ PYTHONPATH=backend uvicorn backend.main:app --reload
 $env:PYTHONPATH="backend"; uvicorn backend.main:app --reload
 ```
 
+### 8. Build or run the frontend
+
+The UI lives in `web/` (React + TypeScript, needs Node 20+).
+
+```bash
+cd web
+npm ci
+npm run build      # outputs web/dist, which FastAPI serves at /
+```
+
 Open [http://localhost:8000](http://localhost:8000).
+
+For frontend development with hot reload, keep the backend running and start Vite in a second terminal:
+
+```bash
+cd web
+npm run dev        # http://localhost:5173, API calls are proxied to :8000
+```
+
+The original vanilla JS page is still available at `/legacy`.
+
+### Run with Docker
+
+```bash
+docker build -t neuroquery .
+docker run -p 7860:7860 --env-file .env neuroquery
+```
+
+The Dockerfile builds the frontend in a Node stage and copies only the static build into the Python image.
+
+---
+
+## Frontend
+
+The interface is built around one question: **can the reader check where an answer came from?**
+
+- **Clickable citations.** The LLM cites context blocks inline as `[1]`, `[2, 4]`. Each marker becomes a button that scrolls to and highlights the exact passage it refers to.
+- **Evidence panel.** Every retrieved passage is shown next to the answer, marked *cited* or *not cited*, with a link to the PubMed record. Unused passages make retrieval misses visible instead of hiding them.
+- **Reliability view.** Shows the BioBERT vs TF-IDF evaluation scores from `/eval`, so users see how far to trust answers.
+- **Robust request handling.** Typed API client with timeouts, a Stop button (AbortController), readable error messages from FastAPI and Groq rate limits, and one-click retry.
+- **History.** Conversations are kept per browser in localStorage, with safe fallbacks when storage is unavailable.
+- **Responsive.** On narrow screens the sidebar collapses and the evidence panel becomes a drawer.
+
+```
+web/src/
+├── App.tsx                 # state, request lifecycle, layout
+├── types.ts                # mirrors the Pydantic response models
+├── lib/api.ts              # typed fetch client: timeouts, cancellation, error parsing
+├── lib/citations.ts        # parse [n] markers and link them to passages
+├── lib/useSessions.ts      # conversation history hook
+└── components/             # AnswerMessage, EvidencePanel, EvalCard, Composer, Sidebar
+```
 
 ---
 
@@ -188,14 +243,16 @@ neuroquery/
 ├── tests/
 │   ├── test_chunking.py   # chunking overlap correctness
 │   ├── test_embed.py      # BioBERT embedding dimensionality
-│   └── test_api.py        # FastAPI /stats and /history endpoints
+│   ├── test_api.py        # FastAPI /stats and /history endpoints
+│   └── test_chat.py       # /chat contract: passages, citations, timing, errors
 ├── data/
 │   └── docs/          # Drop PDFs here for local ingestion
+├── web/               # React + TypeScript frontend (Vite, Vitest)
 ├── frontend/
-│   └── index.html     # Chat UI (vanilla JS, dark/light mode)
+│   └── index.html     # legacy vanilla JS UI, served at /legacy
 ├── mcp_server.py      # MCP server — exposes RAG tools via Model Context Protocol
 ├── requirements.txt   # pinned dependencies
-├── Makefile           # ingest / eval / eval-tfidf / eval-compare / test
+├── Makefile           # ingest / eval / test / web-build / web-test
 ├── EVALUATION.md      # retriever comparison methodology and results
 ├── .env.example
 ├── .gitignore
