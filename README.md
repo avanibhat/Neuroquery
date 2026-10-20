@@ -123,7 +123,11 @@ Edit `.env`:
 ```env
 GROQ_API_KEY=gsk_...
 ENTREZ_EMAIL=you@example.com
+# Optional: override the Groq model (default: llama-3.3-70b-versatile)
+# GROQ_MODEL=openai/gpt-oss-120b
 ```
+
+`GROQ_MODEL` is optional. If your Groq key can't access the default model, set it to another model your key can use. On Hugging Face Spaces, add it under **Settings → Variables and secrets**.
 
 ### 5. (Optional) Add local PDFs
 

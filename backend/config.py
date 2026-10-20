@@ -19,7 +19,7 @@ EVAL_FILES       = {
 
 # Models
 BIOBERT_MODEL    = "dmis-lab/biobert-v1.1"
-GROQ_MODEL       = "llama-3.3-70b-versatile"
+GROQ_MODEL       = os.getenv("GROQ_MODEL", "").strip() or "llama-3.3-70b-versatile"
 COLLECTION_NAME  = "alzheimers_docs"
 
 # Chunking
